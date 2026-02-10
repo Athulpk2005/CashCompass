@@ -1,0 +1,70 @@
+==========================================
+RENDER BACKEND SETUP (CASHCOMPASS)
+==========================================
+
+STEP 1: Go to Render Dashboard
+- Open: https://dashboard.render.com
+- Sign in with GitHub
+
+STEP 2: Create New Web Service
+- Click: "New +" (top right)
+- Select: "Web Service"
+
+STEP 3: Connect Repository
+- Find: "CashCompass-Frontend&backend"
+- Click: "Connect"
+
+STEP 4: Configure Service
+==========================================
+| Field              | Value                  |
+|--------------------|------------------------|
+| Name               | cashcompass-api        |
+| Root Directory     | Backend                |
+| Environment        | Node                   |
+| Build Command      | npm install            |
+| Start Command      | node server.js         |
+==========================================
+
+STEP 5: Add Environment Variables
+Scroll to "Advanced" → Click "Add Environment Variables"
+
+Add these:
+------------------------------------------
+KEY                    VALUE
+------------------------------------------
+NODE_ENV               production
+PORT                   10000
+MONGODB_URI            (your MongoDB Atlas connection string)
+JWT_SECRET             7b4a8730e16a4a30406d577bb5d7aaf8885d059ee879fccd0f202aea23f3fb996986bf35aeb3fa07ea2a2d18df965a77812bef5d30a18eaaa604d16a060cb43b
+FRONTEND_URL          https://cashcompass-a9996.web.app
+------------------------------------------
+
+STEP 6: Select Plan
+- Choose: "Free" (default)
+
+STEP 7: Create Web Service
+- Click: "Create Web Service"
+- Wait for deployment (2-3 minutes)
+
+==========================================
+AFTER DEPLOYMENT:
+==========================================
+
+Your Backend URL:
+https://cashcompass-api.onrender.com
+
+Test API:
+https://cashcompass-api.onrender.com/api/health
+
+Expected Response:
+{"status":"ok","message":"CashCompass API is running"}
+
+==========================================
+THEN UPDATE FRONTEND:
+==========================================
+
+1. Go to Firebase Console → Hosting → Environment variables
+2. Add: VITE_API_URL = https://cashcompass-api.onrender.com
+3. Run: firebase deploy --only hosting
+
+==========================================
