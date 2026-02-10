@@ -13,17 +13,53 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
+
+  // Email validation regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.email) {
+      errors.email = 'Email is required';
+    } else if (!emailRegex.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user starts typing
+    if (formErrors[e.target.name]) {
+      setFormErrors({
+        ...formErrors,
+        [e.target.name]: ''
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    // Validate form
+    if (!validateForm()) {
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -78,7 +114,7 @@ function Login() {
 
         {/* Login Form */}
         <div className="bg-white dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-800/30 rounded-2xl shadow-xl p-8">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Sign In</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Sign in to your account</h2>
 
           {error && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-sm">
@@ -89,47 +125,66 @@ function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-emerald-100 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-emerald-100 mb-1">
                 Email Address
               </label>
               <div className="relative">
                 <MdEmail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-emerald-500/50 text-xl" />
                 <input
                   type="email"
+                  id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="Enter your email"
-                  className="w-full pl-10 pr-4 py-3 bg-white dark:bg-emerald-900/20 border border-slate-200 dark:border-emerald-800/50 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                  aria-describedby="email-error"
+                  className={`w-full pl-10 pr-4 py-3 bg-white dark:bg-emerald-900/20 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all ${
+                    formErrors.email 
+                      ? 'border-red-500 focus:border-red-500' 
+                      : 'border-slate-200 dark:border-emerald-800/50'
+                  }`}
                   required
                 />
               </div>
+              {formErrors.email && (
+                <p id="email-error" className="mt-1 text-sm text-red-500">{formErrors.email}</p>
+              )}
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-emerald-100 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-emerald-100 mb-1">
                 Password
               </label>
               <div className="relative">
                 <MdLock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-emerald-500/50 text-xl" />
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Enter your password"
-                  className="w-full pl-10 pr-12 py-3 bg-white dark:bg-emerald-900/20 border border-slate-200 dark:border-emerald-800/50 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                  aria-describedby="password-error"
+                  className={`w-full pl-10 pr-12 py-3 bg-white dark:bg-emerald-900/20 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all ${
+                    formErrors.password 
+                      ? 'border-red-500 focus:border-red-500' 
+                      : 'border-slate-200 dark:border-emerald-800/50'
+                  }`}
                   required
                 />
                 <button
                   type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-emerald-100"
                 >
                   {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
                 </button>
               </div>
+              {formErrors.password && (
+                <p id="password-error" className="mt-1 text-sm text-red-500">{formErrors.password}</p>
+              )}
             </div>
 
             {/* Forgot Password Link */}
@@ -167,11 +222,6 @@ function Login() {
             </Link>
           </p>
         </div>
-
-        {/* Footer */}
-        <p className="mt-6 text-center text-xs text-slate-400 dark:text-emerald-500/40">
-          Demo: Use any email/password to login
-        </p>
       </div>
     </div>
     </>

@@ -1,8 +1,18 @@
 const express = require('express');
+const { body, validationResult } = require('express-validator');
 const Investment = require('../models/Investment');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
+
+// Validation middleware
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  next();
+};
 
 // Get all investments for user
 router.get('/', auth, async (req, res) => {
@@ -19,8 +29,14 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// Create investment
-router.post('/', auth, async (req, res) => {
+// Create investment with validation
+router.post('/', auth, [
+  body('name').trim().notEmpty().withMessage('Investment name is required'),
+  body('type').isIn(['stock', 'mutual_fund', 'fd', 'ppf', 'nps', 'gold', 'real_estate', 'crypto', 'other']).withMessage('Invalid investment type'),
+  body('investedAmount').isFloat({ min: 0 }).withMessage('Invested amount must be a positive number'),
+  body('currentValue').optional().isFloat({ min: 0 }).withMessage('Current value must be a positive number'),
+  body('purchaseDate').optional().isISO8601().withMessage('Invalid date format'),
+], handleValidationErrors, async (req, res) => {
   try {
     const investment = await Investment.create({
       ...req.body,
@@ -32,8 +48,14 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// Update investment
-router.put('/:id', auth, async (req, res) => {
+// Update investment with validation
+router.put('/:id', auth, [
+  body('name').optional().trim().notEmpty().withMessage('Investment name cannot be empty'),
+  body('type').optional().isIn(['stock', 'mutual_fund', 'fd', 'ppf', 'nps', 'gold', 'real_estate', 'crypto', 'other']).withMessage('Invalid investment type'),
+  body('investedAmount').optional().isFloat({ min: 0 }).withMessage('Invested amount must be a positive number'),
+  body('currentValue').optional().isFloat({ min: 0 }).withMessage('Current value must be a positive number'),
+  body('purchaseDate').optional().isISO8601().withMessage('Invalid date format'),
+], handleValidationErrors, async (req, res) => {
   try {
     const investment = await Investment.findOneAndUpdate(
       { _id: req.params.id, user: req.user.id },

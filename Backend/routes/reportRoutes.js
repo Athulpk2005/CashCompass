@@ -1,12 +1,25 @@
 const express = require('express');
+const { query, validationResult } = require('express-validator');
 const Transaction = require('../models/Transaction');
 const Investment = require('../models/Investment');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get summary report
-router.get('/summary', auth, async (req, res) => {
+// Validation middleware
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  next();
+};
+
+// Get summary report with date validation
+router.get('/summary', auth, [
+  query('startDate').optional().isISO8601().withMessage('Invalid start date format'),
+  query('endDate').optional().isISO8601().withMessage('Invalid end date format'),
+], handleValidationErrors, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const query = { user: req.user.id };

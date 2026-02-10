@@ -15,28 +15,66 @@ function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
+
+  // Email validation regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+  // Password validation regex (at least 8 chars, 1 uppercase, 1 lowercase, 1 number)
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.name) {
+      errors.name = 'Name is required';
+    } else if (formData.name.length < 2) {
+      errors.name = 'Name must be at least 2 characters';
+    }
+    
+    if (!formData.email) {
+      errors.email = 'Email is required';
+    } else if (!emailRegex.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (!passwordRegex.test(formData.password)) {
+      errors.password = 'Password must be at least 8 characters with uppercase, lowercase, and number';
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user starts typing
+    if (formErrors[e.target.name]) {
+      setFormErrors({
+        ...formErrors,
+        [e.target.name]: ''
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+    
+    // Validate form
+    if (!validateForm()) {
       return;
     }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-
+    
     setLoading(true);
 
     try {
@@ -114,10 +152,17 @@ function Register() {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Enter your name"
-                  className="w-full pl-10 pr-4 py-3 bg-white dark:bg-emerald-900/20 border border-slate-200 dark:border-emerald-800/50 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                  className={`w-full pl-10 pr-4 py-3 bg-white dark:bg-emerald-900/20 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all ${
+                    formErrors.name 
+                      ? 'border-red-500 focus:border-red-500' 
+                      : 'border-slate-200 dark:border-emerald-800/50'
+                  }`}
                   required
                 />
               </div>
+              {formErrors.name && (
+                <p className="mt-1 text-sm text-red-500">{formErrors.name}</p>
+              )}
             </div>
 
             {/* Email */}
@@ -133,10 +178,17 @@ function Register() {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="Enter your email"
-                  className="w-full pl-10 pr-4 py-3 bg-white dark:bg-emerald-900/20 border border-slate-200 dark:border-emerald-800/50 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                  className={`w-full pl-10 pr-4 py-3 bg-white dark:bg-emerald-900/20 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all ${
+                    formErrors.email 
+                      ? 'border-red-500 focus:border-red-500' 
+                      : 'border-slate-200 dark:border-emerald-800/50'
+                  }`}
                   required
                 />
               </div>
+              {formErrors.email && (
+                <p className="mt-1 text-sm text-red-500">{formErrors.email}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -152,9 +204,12 @@ function Register() {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Create a password"
-                  className="w-full pl-10 pr-12 py-3 bg-white dark:bg-emerald-900/20 border border-slate-200 dark:border-emerald-800/50 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                  className={`w-full pl-10 pr-12 py-3 bg-white dark:bg-emerald-900/20 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all ${
+                    formErrors.password 
+                      ? 'border-red-500 focus:border-red-500' 
+                      : 'border-slate-200 dark:border-emerald-800/50'
+                  }`}
                   required
-                  minLength={6}
                 />
                 <button
                   type="button"
@@ -164,6 +219,9 @@ function Register() {
                   {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
                 </button>
               </div>
+              {formErrors.password && (
+                <p className="mt-1 text-sm text-red-500">{formErrors.password}</p>
+              )}
             </div>
 
             {/* Confirm Password */}
@@ -179,10 +237,17 @@ function Register() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="Confirm your password"
-                  className="w-full pl-10 pr-4 py-3 bg-white dark:bg-emerald-900/20 border border-slate-200 dark:border-emerald-800/50 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                  className={`w-full pl-10 pr-4 py-3 bg-white dark:bg-emerald-900/20 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all ${
+                    formErrors.confirmPassword 
+                      ? 'border-red-500 focus:border-red-500' 
+                      : 'border-slate-200 dark:border-emerald-800/50'
+                  }`}
                   required
                 />
               </div>
+              {formErrors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-500">{formErrors.confirmPassword}</p>
+              )}
             </div>
 
             {/* Submit Button */}

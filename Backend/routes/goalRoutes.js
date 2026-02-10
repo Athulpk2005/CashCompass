@@ -1,8 +1,18 @@
 const express = require('express');
+const { body, validationResult } = require('express-validator');
 const Goal = require('../models/Goal');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
+
+// Validation middleware
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  next();
+};
 
 // Get all goals for user
 router.get('/', auth, async (req, res) => {
@@ -14,8 +24,14 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// Create goal
-router.post('/', auth, async (req, res) => {
+// Create goal with validation
+router.post('/', auth, [
+  body('name').trim().notEmpty().withMessage('Goal name is required'),
+  body('target').isFloat({ min: 0 }).withMessage('Target amount must be a positive number'),
+  body('current').optional().isFloat({ min: 0 }).withMessage('Current amount must be a positive'),
+  body('category').trim().notEmpty().withMessage('Category is required'),
+  body('deadline').optional().isISO8601().withMessage('Invalid deadline format'),
+], handleValidationErrors, async (req, res) => {
   try {
     const goal = await Goal.create({
       name: req.body.name,
@@ -33,8 +49,13 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// Update goal
-router.put('/:id', auth, async (req, res) => {
+// Update goal with validation
+router.put('/:id', auth, [
+  body('name').optional().trim().notEmpty().withMessage('Goal name cannot be empty'),
+  body('target').optional().isFloat({ min: 0 }).withMessage('Target amount must be a positive number'),
+  body('current').optional().isFloat({ min: 0 }).withMessage('Current amount must be positive'),
+  body('deadline').optional().isISO8601().withMessage('Invalid deadline format'),
+], handleValidationErrors, async (req, res) => {
   try {
     const goal = await Goal.findOneAndUpdate(
       { _id: req.params.id, user: req.user.id },
@@ -74,8 +95,10 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
-// Add funds to goal
-router.put('/:id/add-funds', auth, async (req, res) => {
+// Add funds to goal with validation
+router.put('/:id/add-funds', auth, [
+  body('amount').isFloat({ min: 0.01 }).withMessage('Amount must be a positive number'),
+], handleValidationErrors, async (req, res) => {
   try {
     const goal = await Goal.findOne({
       _id: req.params.id,

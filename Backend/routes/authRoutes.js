@@ -200,8 +200,11 @@ router.put('/profile', auth, async (req, res) => {
   }
 });
 
-// Change password
-router.put('/password', auth, async (req, res) => {
+// Change password with validation
+router.put('/password', auth, [
+  body('currentPassword').notEmpty().withMessage('Current password is required'),
+  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters'),
+], handleValidationErrors, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     
@@ -217,7 +220,13 @@ router.put('/password', auth, async (req, res) => {
       return res.status(400).json({ error: 'Current password is incorrect' });
     }
 
-    // Update password
+    // Check if new password is different from current
+    const passwordCheck = await user.comparePassword(newPassword);
+    if (passwordCheck) {
+      return res.status(400).json({ error: 'New password must be different from current password' });
+    }
+
+    // Update password (will be hashed by pre('save') middleware)
     user.password = newPassword;
     await user.save();
 

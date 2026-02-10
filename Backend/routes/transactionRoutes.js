@@ -54,8 +54,13 @@ router.post('/', auth, [
   }
 });
 
-// Update transaction
-router.put('/:id', auth, async (req, res) => {
+// Update transaction with validation
+router.put('/:id', auth, [
+  body('type').optional().isIn(['income', 'expense']).withMessage('Type must be income or expense'),
+  body('category').optional().trim().notEmpty().withMessage('Category cannot be empty'),
+  body('amount').optional().isFloat({ min: 0 }).withMessage('Amount must be a positive number'),
+  body('date').optional().isISO8601().withMessage('Invalid date format'),
+], handleValidationErrors, async (req, res) => {
   try {
     const transaction = await Transaction.findOneAndUpdate(
       { _id: req.params.id, user: req.user.id },
